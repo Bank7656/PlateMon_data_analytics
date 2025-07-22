@@ -37,16 +37,16 @@ def plot_bath(df, bath_ids, param):
     plt.show()
     return None
 
-def plot_all_params(df, bath_ids, parameters, y_pos: list[list[int]] = []) -> None:
+def plot_all_params(df, bath_ids, variables) -> None:
 
-    # 1. Create a figure with a subplot for each group in the list
-    num_groups = len(parameters)
     row = 2
+    count = 0
+    params = list(variables.keys())
+    num_groups = len(variables)
     col = int((num_groups + 1) / 2)
     fig, axes = plt.subplots(row, col, figsize=(5 * num_groups, 10), squeeze=False)
     plt.suptitle("Parameters Monitoring Data", fontsize=24)
     plt.subplots_adjust(hspace=0.35)
-    count = 0
     plot_data = df[df['run_id'].isin(bath_ids)]
     for i in range(row):
         for j in range(col):
@@ -68,17 +68,17 @@ def plot_all_params(df, bath_ids, parameters, y_pos: list[list[int]] = []) -> No
                 continue
             ax = sns.lineplot(
                 data=plot_data,
-                x='time_total', y=parameters[count],
+                x='time_total', y=params[count],
                 hue='run_id', ax=axes[i][j]
             )
             ax.set_xlabel('Plating Time (sec)', fontsize=16)
-            ax.set_ylabel(parameters[count], fontsize=16)
-            if y_pos:
-                ax.set_ylim(y_pos[count][0], y_pos[count][1])
+            ax.set_ylabel(params[count], fontsize=16)
+            if variables[params[count]]:
+                ax.set_ylim(variables[params[count]][0], variables[params[count]][1])
             # 5. Set the title for each individual subplot
-            axes[i][j].set_title(f'{parameters[count]} vs Plating time', fontsize=20)
+            axes[i][j].set_title(f'{params[count]} vs Plating time', fontsize=20)
             axes[i][j].legend_.remove() # Ensure each subplot has its own legend  
-            count += 1         
+            count += 1   
     return None
 
 
