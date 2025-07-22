@@ -39,9 +39,8 @@ def plot_bath(df, bath_ids, param):
 
 def plot_all_params(df, bath_ids, parameters, y_pos: list[list[int]] = []) -> None:
 
-    # # 1. Create a figure with a subplot for each group in the list
+    # 1. Create a figure with a subplot for each group in the list
     num_groups = len(parameters)
-    print(f'num_group: {num_groups}')
     row = 2
     col = int((num_groups + 1) / 2)
     fig, axes = plt.subplots(row, col, figsize=(5 * num_groups, 10), squeeze=False)
