@@ -1,13 +1,18 @@
 import os
+from tqdm import tqdm_notebook as tqdm
 import matplotlib.pyplot as plt
 import numpy as np 
 import pandas as pd
 import seaborn as sns
-import plotly.express as px
-import plotly.subplots as psp
-import plotly.graph_objs as go
+# import plotly.express as px
+# import plotly.subplots as psp
+# import plotly.graph_objs as go
+
+GREEN = "\033[92m"
+RESET = "\033[00m"
 
 OUTPUT_DIR_NAME = "output"
+SAVE_MODE = "save"
 
 current_row_index = 2
 
@@ -61,6 +66,8 @@ def plot_all_params(df, bath_ids, variables, mode=None) -> plt.Figure:
     params = list(variables.keys())
     num_groups = len(variables)
     col = int((num_groups + 1) / 2)
+    # if  (nu)
+    legend_col = int(len(bath_ids) / 15) + 1
     fig, axes = plt.subplots(row, col, figsize=(5 * num_groups, 10), squeeze=False)
     plt.suptitle("Parameters Monitoring Data", fontsize=24)
     plt.subplots_adjust(hspace=0.35)
@@ -72,6 +79,7 @@ def plot_all_params(df, bath_ids, variables, mode=None) -> plt.Figure:
                 legend_bbox = axes[i][j].get_position()
                 fig.legend(handles, labels,
                         loc='center', # Place the legend centered within its "subplot" area
+                        ncol=legend_col, 
                         bbox_to_anchor=(legend_bbox.x0 + legend_bbox.width / 2,
                                         legend_bbox.y0 + legend_bbox.height / 2),
                         bbox_transform=fig.transFigure,
@@ -97,14 +105,12 @@ def plot_all_params(df, bath_ids, variables, mode=None) -> plt.Figure:
             axes[i][j].legend_.remove() # Ensure each subplot has its own legend  
             count += 1
     if mode == "save":
-        print("[Save Mode]")
         if len(bath_ids) == 1:
             save_graph(fig, bath_ids[0])
         else:
             condition = df['run_id'] == bath_ids[0]
             bath = df[condition]['bath_id'].unique()[0]
             save_graph(fig, bath)
-        print("[Save Completed >_<]")
         plt.close(fig)
     else:
         print("[Normal Mode]") 
@@ -112,11 +118,32 @@ def plot_all_params(df, bath_ids, variables, mode=None) -> plt.Figure:
 
 def save_graph(fig, name):
 
-    create_output_dir()
     filename = f"monitoring_{name}.png"
     filepath = f"./{OUTPUT_DIR_NAME}/{filename}"
     fig.savefig(filepath)
+    print(f'{GREEN}[status]{RESET} {filename} was saved successfully at {filepath}')
     return 
+
+
+def save_all_graph(df, params):
+    create_output_dir()
+    print(f"{GREEN}[Save Mode]{RESET}")
+    runs_id = df['run_id'].unique()
+    for id in tqdm(runs_id, unit='File', colour='green', smoothing=1):
+        plot_all_params(df, [id], params, SAVE_MODE)
+    print(f"{GREEN}[Save Completed >_<]{RESET}")
+    return
+
+def save_bath_graph(df, bath_ids, params):
+    create_output_dir()
+    print(f"{GREEN}[Save Mode]{RESET}")
+    for bath in tqdm(bath_ids, unit='File', colour='green', smoothing=1):
+        condition = (df['bath_id'] == bath)
+        single_bath = list(df[condition]['run_id'].unique())
+        plot_all_params(df, single_bath, params, SAVE_MODE)
+    print(f"{GREEN}[Save Completed >_<]{RESET}")
+    return
+
 
 # def plot_all_params(df, bath_ids, variables) -> None:
 
