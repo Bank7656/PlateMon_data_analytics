@@ -1,11 +1,28 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np 
 import pandas as pd
 import seaborn as sns
+import plotly.express as px
+import plotly.subplots as psp
+import plotly.graph_objs as go
+
+OUTPUT_DIR_NAME = "output"
+
+current_row_index = 2
 
 sns.set_context('notebook')
 sns.set_theme(style="darkgrid", 
                 rc={"figure.dpi":300, 'savefig.dpi':300, 'lines.linewidth':1.5})
+
+def create_output_dir() -> None:
+    try:
+        os.mkdir(OUTPUT_DIR_NAME)
+    except FileExistsError:
+        print(f"Directory {OUTPUT_DIR_NAME} already exists.")
+    except OSError as e:
+        print(f"Error creating directory: {e}")
+    return
 
 def plot_bath(df, bath_ids, param):
     sns.set_context('notebook')
@@ -37,7 +54,7 @@ def plot_bath(df, bath_ids, param):
     plt.show()
     return None
 
-def plot_all_params(df, bath_ids, variables) -> None:
+def plot_all_params(df, bath_ids, variables, mode=None) -> plt.Figure:
 
     row = 2
     count = 0
@@ -78,11 +95,74 @@ def plot_all_params(df, bath_ids, variables) -> None:
             # 5. Set the title for each individual subplot
             axes[i][j].set_title(f'{params[count]} vs Plating time', fontsize=20)
             axes[i][j].legend_.remove() # Ensure each subplot has its own legend  
-            count += 1   
-    return None
+            count += 1
+    if mode == "save":
+        print("[Save Mode]")
+        if len(bath_ids) == 1:
+            save_graph(fig, bath_ids[0])
+        else:
+            condition = df['run_id'] == bath_ids[0]
+            bath = df[condition]['bath_id'].unique()[0]
+            save_graph(fig, bath)
+        print("[Save Completed >_<]")
+        plt.close(fig)
+    else:
+        print("[Normal Mode]") 
+    return fig
 
+def save_graph(fig, name):
 
-def plot_single_bath(df, bath_ids, param, y_pos: list[int] = []) -> None:
+    create_output_dir()
+    filename = f"monitoring_{name}.png"
+    filepath = f"./{OUTPUT_DIR_NAME}/{filename}"
+    fig.savefig(filepath)
+    return 
+
+# def plot_all_params(df, bath_ids, variables) -> None:
+
+#     row = 2
+#     count = 0
+#     params = list(variables.keys())
+#     num_groups = len(variables)
+#     col = int((num_groups + 1) / 2)
+#     traces = []
+#     plot_data = df[df['run_id'].isin(bath_ids)]
+#     print(plot_data.shape[0])
+#     for region, geo_region in plot_data.groupby('run_id'):
+#         traces.append(
+#             go.Scatter(
+#                 x=geo_region.time_total,
+#                 y=geo_region.pH,
+#                 name=region,
+#                 mode='lines'
+#             )
+#         )
+#         # fig.add_scatter(
+#         #     x=geo_region.time_total,
+#         #     y=geo_region.pH,
+#         #     name=region,
+#         #     mode='line'
+#         # )
+#         # fig = px.line(
+#         #     data_frame=plot_data, 
+#         #     x='time_total', 
+#         #     y=params[0],
+#         # )
+#     fig = go.Figure(data=traces)
+#     config = {'scrollZoom': True}
+#     fig.update_layout(height=500, width=1000, 
+#                         xaxis=dict(
+#                             minallowed=0, 
+#                             maxallowed=plot_data.shape[0]
+#                         ),
+#                         yaxis=dict(
+#                             minallowed=0,
+#                             maxallowed=plot_data.shape[1]
+#                         ),
+#     )
+#     fig.show(config=config)
+
+def plot_single_bath(df, bath_ids, param, y_pos: list[int] = [], mode=None) -> None:
 
     plot_data = df[df['run_id'].isin(bath_ids)]
     g = sns.relplot(
