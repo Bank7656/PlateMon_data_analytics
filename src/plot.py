@@ -11,7 +11,9 @@ import seaborn as sns
 GREEN = "\033[92m"
 RESET = "\033[00m"
 
-OUTPUT_DIR_NAME = "output"
+BATHS_DIR = "baths"
+RUNS_DIR = "runs"
+OUTPUT_DIR_NAME = "monitoring_data"
 SAVE_MODE = "save"
 
 current_row_index = 2
@@ -20,11 +22,12 @@ sns.set_context('notebook')
 sns.set_theme(style="darkgrid", 
                 rc={"figure.dpi":300, 'savefig.dpi':300, 'lines.linewidth':1.5})
 
-def create_output_dir() -> None:
+def create_output_dir(dir_name) -> None:
     try:
-        os.mkdir(OUTPUT_DIR_NAME)
+        os.mkdir(dir_name)
     except FileExistsError:
-        print(f"Directory {OUTPUT_DIR_NAME} already exists.")
+        # print(f"Directory {dir_name} already exists.")
+        pass
     except OSError as e:
         print(f"Error creating directory: {e}")
     return
@@ -59,7 +62,7 @@ def plot_bath(df, bath_ids, param):
     plt.show()
     return None
 
-def plot_all_params(df, bath_ids, variables, mode=None) -> plt.Figure:
+def plot_all_params(df, bath_ids, variables, mode=None, directory=None) -> plt.Figure:
 
     row = 2
     count = 0
@@ -106,41 +109,62 @@ def plot_all_params(df, bath_ids, variables, mode=None) -> plt.Figure:
             count += 1
     if mode == "save":
         if len(bath_ids) == 1:
-            save_graph(fig, bath_ids[0])
+            save_graph(fig, bath_ids[0], directory)
         else:
             condition = df['run_id'] == bath_ids[0]
             bath = df[condition]['bath_id'].unique()[0]
-            save_graph(fig, bath)
+            save_graph(fig, bath, directory)
         plt.close(fig)
     else:
         print("[Normal Mode]") 
     return fig
 
-def save_graph(fig, name):
+
+def save_graph(fig, name, dir_name):
 
     filename = f"monitoring_{name}.png"
-    filepath = f"./{OUTPUT_DIR_NAME}/{filename}"
+    filepath = f"{dir_name}/{filename}"
     fig.savefig(filepath)
     print(f'{GREEN}[status]{RESET} {filename} was saved successfully at {filepath}')
     return 
 
 
 def save_all_graph(df, params):
-    create_output_dir()
+    create_output_dir(OUTPUT_DIR_NAME)
+    sub_dir = f"./{OUTPUT_DIR_NAME}/{RUNS_DIR}"
+    create_output_dir(sub_dir)
     print(f"{GREEN}[Save Mode]{RESET}")
     runs_id = df['run_id'].unique()
     for id in tqdm(runs_id, unit='File', colour='green', smoothing=1):
-        plot_all_params(df, [id], params, SAVE_MODE)
+        data_dir =  sub_dir + "/" +  get_date_dir(id) 
+        create_output_dir(data_dir)
+        plot_all_params(df, [id], params, SAVE_MODE, data_dir)
     print(f"{GREEN}[Save Completed >_<]{RESET}")
     return
 
+
+def get_date_dir(run_id):
+    if "." in run_id:
+        date_lst = run_id.split(".")
+        dir_name = f"JUN_{date_lst[0]}"
+        return dir_name
+    elif "_" in run_id:
+        date_lst = run_id.split("_")
+        dir_name = f"{date_lst[0]}_{date_lst[1]}"
+        return dir_name
+    else:
+        return run_id
+
+
 def save_bath_graph(df, bath_ids, params):
-    create_output_dir()
+    create_output_dir(OUTPUT_DIR_NAME)
+    sub_dir = f"./{OUTPUT_DIR_NAME}/{BATHS_DIR}"
+    create_output_dir(sub_dir)
     print(f"{GREEN}[Save Mode]{RESET}")
     for bath in tqdm(bath_ids, unit='File', colour='green', smoothing=1):
         condition = (df['bath_id'] == bath)
         single_bath = list(df[condition]['run_id'].unique())
-        plot_all_params(df, single_bath, params, SAVE_MODE)
+        plot_all_params(df, single_bath, params, SAVE_MODE, sub_dir)
     print(f"{GREEN}[Save Completed >_<]{RESET}")
     return
 
@@ -211,7 +235,6 @@ def open_excel(filepath):
     except FileNotFoundError:
         print("File not found")
         return None
-    
     return df
 
 
