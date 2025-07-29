@@ -16,65 +16,130 @@ RUNS_DIR = "runs"
 OUTPUT_DIR_NAME = "monitoring_data"
 SAVE_MODE = "save"
 
+
+
+PARAMETERS = ['pH' ,'voltage', 'current', 'conductivity', 'temperature']
+
+UNITS = {
+    'pH': '',
+    'voltage': '(V)',
+    'current': '(A)',
+    'conductivity': '(mS/cm)',
+    'temperature': '(°C)'
+}
+
+
 current_row_index = 2
 
 sns.set_context('notebook')
 sns.set_theme(style="darkgrid", 
                 rc={"figure.dpi":300, 'savefig.dpi':300, 'lines.linewidth':1.5})
 
-def create_output_dir(dir_name) -> None:
-    try:
-        os.mkdir(dir_name)
-    except FileExistsError:
-        # print(f"Directory {dir_name} already exists.")
-        pass
-    except OSError as e:
-        print(f"Error creating directory: {e}")
-    return
+def plot_single_bath(df, bath_ids, param, y_pos: list[int] = []) -> None:
+    """Plots a single electroplating bath parameter over time.
 
-def plot_bath(df, bath_ids, param):
-    sns.set_context('notebook')
-    sns.set_theme(style="darkgrid", 
-                  rc={"figure.dpi":150, 'savefig.dpi':150, 'lines.linewidth':1.5})
+    Visualizes a specified parameter for given 'run_id's within a single bath.
+    Plots lines for each run, colored by 'run_id'.
 
-    # 1. Create a figure with a subplot for each group in the list
-    num_groups = len(bath_ids)
-    fig, axes = plt.subplots(1, num_groups, figsize=(6 * num_groups, 5), squeeze=False)
-    axes = axes.flatten()  # Ensure axes is always a 1D array for easy looping
+    Args:
+        df (pandas.DataFrame): Electroplating data with 'run_id', 'time_total', and `param` columns.
+        bath_ids (list[str]): List of 'run_id's to plot.
+        param (str): The parameter column name to plot (e.g., 'pH', 'voltage').
+        y_pos (list[float], optional): `[min, max]` for y-axis limits. Defaults to auto-scale.
 
-    for i, bath in enumerate(bath_ids):
-        plot_data = df[df['run_id'].isin(bath)]
+    Returns:
+        None: Displays the plot.
 
-        # If no data is found for this group, skip to avoid errors
-        if plot_data.empty:
-            axes[i].set_title(f'No data for: {", ".join(bath)}')
-            continue
-        sns.lineplot(
-            data=plot_data,
-            x='cumulative_time', y=param,
-            hue='run_id', ax=axes[i]
-        )
-
-        # 5. Set the title for each individual subplot
-        axes[i].set_title(f'Runs: {", ".join(map(str, bath))}')
-        axes[i].legend() # Ensure each subplot has its own legend
-
-    plt.show()
+    Raises:
+        This function does not raise any exceptions.
+    
+    Examples:
+        Y_LIM = [[0, 5], [0, 5], [0, 3], [40, 80], [40, 80]]
+        BATH = ['18.1', '18.2', '18.3', '18.4', '18.5', '19.1', '19.2']
+        for param, y_pos in zip(PARAMETERS, Y_LIM):
+            plot_single_bath(two_side_plate, BATH, param, y_pos)
+    """
+    plot_data = df[df['run_id'].isin(bath_ids)]
+    g = sns.relplot(
+        data=plot_data, kind='line',
+        x='time_total', y=param,
+        hue='run_id', aspect=1.5
+    )
+    g.set_axis_labels("Plating Time (s)", param)
+    if y_pos:
+        g.ax.set_ylim(y_pos[0], y_pos[1])
+    g.figure.suptitle(f'{param} vs. Plating Time')
+    g.figure.subplots_adjust(top=0.9)
     return None
 
-def plot_all_params(df, bath_ids, variables, mode=None, directory=None) -> plt.Figure:
+def plot_all_params(df, run_ids, variables, mode=None, directory=None) -> plt.Figure:
+    """ Ploting every measured electroplating bath parameter in time series.
 
+    This function will create subplot for each parameters then iterate to create 
+    line plot, title, label, and limits the value for each parameters.
+    Last subplot will be for the legend of each electroplating experiment "run_id" 
+    that will catagorize by color gradient. 
+
+    This function also have an optional argument "mode" that can change into saving mode "save".
+    It will not show the graph to the interface but instead save it into .png file depends on
+    "run_ids". Save mode will automatically create "OUTPUT_DIR_NAME" directory
+    then create sub-directory as "BATH_DIR" and "RUN_DIR" depends on a length of "baths_ids" list.
+
+        - If "baths_ids" has length of 1. It will create file name with "run_id" 
+        otherwise it will create with "Bath_id" instead.
+        - If "baths_ids" has length of 1. It will also create sub_directory for each day 
+        depends on the "run_id"
+
+    Args:
+        df (pandas.DataFrame): The electroplating monitoring dataset.
+        run_ids (list[str]): A list of 'run_id' strings representing specific
+        electroplating experiments to plot. These do not need to belong to
+        the same electroplating bath.
+        variables (dict[str, list[float]]): dictionary of paramenters. Name as a key and a list of [min, max] of the 
+            plot axis of each parameters. Right now fixed 5 parameters as
+            ['conductivity', 'pH', 'temperature', 'voltage', 'current'] can be switching places.
+        mode (str, optional): Controls the function's behavior.
+            - Set to "save" to save the plots as PNG files to disk instead of
+            displaying them.
+            - Defaults to displaying the plots interactively.
+        directory (str, optional): **[INTERNAL USE ONLY]** The base directory
+            where plots will be saved when `mode` is set to `"save"`.
+    
+    Returns:
+        matplotlib.figure.Figure: The Matplotlib Figure object containing the plots.
+            This is returned regardless of whether the plots are displayed or saved.
+    
+    Raises:
+        This function does not raise any exceptions.
+    
+    Example:
+
+        PARAMS = {
+            'pH': [0, 5],
+            'voltage': [0, 5],
+            'current': [0, 5],
+            'conductivity': [45, 60],
+            'temperature': [45, 60]
+        }
+
+        condition = (internal_df['bath_id'] == 'Bath_1')
+        full_bath_1 = list(internal_df[condition]['run_id'].unique())
+        plot_all_params(internal_df, full_bath_1, PARAMS)
+
+        This will plot whole bath graph for every "run_id" consecutively
+        If you want to plot individualy you can use this instead
+            plot_all_params(internal_df, [JUL_1_2], PARAMS)
+    """
     row = 2
     count = 0
     params = list(variables.keys())
     num_groups = len(variables)
     col = int((num_groups + 1) / 2)
-    # if  (nu)
-    legend_col = int(len(bath_ids) / 15) + 1
+    legend_col = int(len(run_ids) / 15) + 1
     fig, axes = plt.subplots(row, col, figsize=(5 * num_groups, 10), squeeze=False)
     plt.suptitle("Parameters Monitoring Data", fontsize=24)
     plt.subplots_adjust(hspace=0.35)
-    plot_data = df[df['run_id'].isin(bath_ids)]
+    plot_data = df[df['run_id'].isin(run_ids)]
     for i in range(row):
         for j in range(col):
             if (i == row - 1 and j == col - 1):
@@ -92,58 +157,81 @@ def plot_all_params(df, bath_ids, variables, mode=None, directory=None) -> plt.F
                 axes[i][j].remove()
                 break
             if plot_data.empty:
-                axes[i][j].set_title(f'No data for: {", ".join(bath_ids)}')
-                continue
+                axes[i][j].set_title(f'No data for: {", ".join(run_ids)}')
+                continue                                
             ax = sns.lineplot(
                 data=plot_data,
                 x='time_total', y=params[count],
                 hue='run_id', ax=axes[i][j]
             )
             ax.set_xlabel('Plating Time (sec)', fontsize=16)
-            ax.set_ylabel(params[count], fontsize=16)
             if variables[params[count]]:
                 ax.set_ylim(variables[params[count]][0], variables[params[count]][1])
+            name = params[count]
+            if params[count] != "pH":
+                name = list(name)
+                name[0] = name[0].upper()
+                name = "".join(name)
+            y_label = f"{name} {UNITS[params[count]]}"
+            ax.set_ylabel(y_label, fontsize=16)
             # 5. Set the title for each individual subplot
-            axes[i][j].set_title(f'{params[count]} vs Plating time', fontsize=20)
+            axes[i][j].set_title(f'{name} vs Plating time', fontsize=20)
             axes[i][j].legend_.remove() # Ensure each subplot has its own legend  
             count += 1
     if mode == "save":
-        if len(bath_ids) == 1:
-            save_graph(fig, bath_ids[0], directory)
+        if len(run_ids) == 1:
+            save_graph(fig, run_ids[0], directory)
         else:
-            condition = df['run_id'] == bath_ids[0]
+            condition = df['run_id'] == run_ids[0]
             bath = df[condition]['bath_id'].unique()[0]
             save_graph(fig, bath, directory)
-        plt.close(fig)
-    else:
-        print("[Normal Mode]") 
+    plt.close(fig)
     return fig
 
+def create_dir(dir_name) -> None:
+    """ Create directory
 
-def save_graph(fig, name, dir_name):
+    Makes the mkdir() system call to the operating system kernel 
+    to perform the directory creation.
 
-    filename = f"monitoring_{name}.png"
-    filepath = f"{dir_name}/{filename}"
-    fig.savefig(filepath)
-    print(f'{GREEN}[status]{RESET} {filename} was saved successfully at {filepath}')
-    return 
-
-
-def save_all_graph(df, params):
-    create_output_dir(OUTPUT_DIR_NAME)
-    sub_dir = f"./{OUTPUT_DIR_NAME}/{RUNS_DIR}"
-    create_output_dir(sub_dir)
-    print(f"{GREEN}[Save Mode]{RESET}")
-    runs_id = df['run_id'].unique()
-    for id in tqdm(runs_id, unit='File', colour='green', smoothing=1):
-        data_dir =  sub_dir + "/" +  get_date_dir(id) 
-        create_output_dir(data_dir)
-        plot_all_params(df, [id], params, SAVE_MODE, data_dir)
-    print(f"{GREEN}[Save Completed >_<]{RESET}")
+    Args:
+        dir_name (str): Name that you want to use to create a directory
+    
+    Return:
+        None
+    
+    Raises:
+        OSError: If system call was not successfully
+    """    
+    try:
+        os.mkdir(dir_name)
+    except FileExistsError:
+        # print(f"Directory {dir_name} already exists.")
+        pass
+    except OSError as e:
+        raise OSError(f"Error creating directory: {e}")
     return
 
-
 def get_date_dir(run_id):
+    """Generates a directory name based on the format of a run ID.
+
+    This function parses a `run_id` string and extracts relevant date information
+    to construct a standardized directory name. The format of the `run_id`
+    determines the output:
+    - If `run_id` contains a '.', it assumes a 'MM.DD' format (e.g., '06.15')
+      and returns 'JUN_DD'.
+    - If `run_id` contains a '_', it assumes a 'MMM_DD' format (e.g., 'JUL_29')
+      and returns 'MMM_DD'.
+    - If neither character is present, the `run_id` itself is returned.
+
+    Args:
+        run_id (str): The unique identifier for an experiment run,
+            expected in formats like 'DD.MM' (e.g., '15.06'), 'MMM_DD'
+            (e.g., 'JUL_29'), or a plain string.
+
+    Returns:
+        str: A standardized directory name based on the `run_id` format.
+    """
     if "." in run_id:
         date_lst = run_id.split(".")
         dir_name = f"JUN_{date_lst[0]}"
@@ -156,17 +244,106 @@ def get_date_dir(run_id):
         return run_id
 
 
-def save_bath_graph(df, bath_ids, params):
-    create_output_dir(OUTPUT_DIR_NAME)
+def save_individual_run(df, params):
+    """Generates and saves time series plots for each individual experiment run.
+
+    This function iterates through all unique 'run_id's.
+    For each run, it creates a dedicated subdirectory within `OUTPUT_DIR_NAME/RUNS_DIR`
+    whose name is derived from the `run_id` (e.g., 'JUN_15' for '15.06', 'JUL_29' for 'JUL_29').
+    It then calls `plot_all_params` in 'save' mode to generate and save plots
+    for that specific run within its designated daily directory.
+
+    Args:
+        df (pandas.DataFrame): The main electroplating monitoring dataset.
+        params (dict[str, list[float]]): A dictionary defining the parameters
+            to plot and their y-axis display limits.
+            - Keys: Parameter names (e.g., 'pH', 'voltage').
+            - Values: `[min_value, max_value]` for the y-axis range.
+
+    Returns:
+        None: The function performs file saving as a side effect and does not
+            return any value.
+    """
+    create_dir(OUTPUT_DIR_NAME)
+    sub_dir = f"./{OUTPUT_DIR_NAME}/{RUNS_DIR}"
+    create_dir(sub_dir)
+    runs_id = df['run_id'].unique()
+    for id in tqdm(runs_id, unit='File', colour='green', smoothing=1):
+        data_dir =  sub_dir + "/" +  get_date_dir(id) 
+        create_dir(data_dir)
+        plot_all_params(df, [id], params, SAVE_MODE, data_dir)
+    print(f"{GREEN}[Save Completed >_<]{RESET}")
+    return
+
+
+def save_bath(df, bath_ids, params):
+    """Generates and saves time series plots for multiple electroplating baths.
+
+    This function automates the process of creating and saving time series plots
+    for all parameters within specified electroplating baths. It iterates through 
+    each `bath_id` provided, calls `plot_all_params` in 'save' mode to generate 
+    and save the plots for all runs within that specific bath.
+
+    Args:
+        df (pandas.DataFrame): The main electroplating monitoring dataset.
+        bath_ids (list[str]): A list of unique 'bath_id' strings for which
+            plots should be generated and saved.
+        params (dict[str, list[float]]): A dictionary defining the parameters
+            to plot and their y-axis display limits.
+            - Keys: Parameter names (e.g., 'pH', 'voltage', 'current').
+            - Values: `[min_value, max_value]` for the y-axis range.
+
+    Returns:
+        None: The function performs file saving as a side effect and does not
+            return any value.
+    """
+    create_dir(OUTPUT_DIR_NAME)
     sub_dir = f"./{OUTPUT_DIR_NAME}/{BATHS_DIR}"
-    create_output_dir(sub_dir)
-    print(f"{GREEN}[Save Mode]{RESET}")
+    create_dir(sub_dir)
     for bath in tqdm(bath_ids, unit='File', colour='green', smoothing=1):
         condition = (df['bath_id'] == bath)
         single_bath = list(df[condition]['run_id'].unique())
         plot_all_params(df, single_bath, params, SAVE_MODE, sub_dir)
     print(f"{GREEN}[Save Completed >_<]{RESET}")
     return
+
+
+def save_graph(fig, name, dir_name):
+    """Saves a Matplotlib figure to a specified directory.
+
+    Constructs a filename and filepath, then saves the provided Matplotlib
+    Figure object as a PNG image. Prints a success message upon completion.
+
+    Args:
+        fig (matplotlib.figure.Figure): The Matplotlib Figure object to be saved.
+        name (str): A descriptive name for the graph, used in the filename
+            (e.g., 'pH_vs_time').
+        dir_name (str): The path to the directory where the graph will be saved.
+            The directory will be created if it does not exist.
+
+    Returns:
+        None: The function saves the file as a side effect and does not return a value.
+
+    Raises:
+        OSError: If the `dir_name` is invalid or there are permission issues
+            preventing file saving.
+        TypeError: If `fig` is not a valid Matplotlib Figure object.
+    """
+    # Ensure the directory exists before saving
+    os.makedirs(dir_name, exist_ok=True)
+
+    filename = f"monitoring_{name}.png"
+    filepath = os.path.join(dir_name, filename) # Use os.path.join for cross-platform compatibility
+
+    try:
+        fig.savefig(filepath)
+        print(f'{GREEN}[status]{RESET} {filename} was saved successfully at {filepath}')
+    except Exception as e:
+        # Catching a broad exception for demonstration; in real code, be more specific.
+        raise OSError(f"Failed to save graph to {filepath}: {e}") from e
+
+
+
 
 
 # def plot_all_params(df, bath_ids, variables) -> None:
@@ -213,33 +390,17 @@ def save_bath_graph(df, bath_ids, params):
 #     )
 #     fig.show(config=config)
 
-def plot_single_bath(df, bath_ids, param, y_pos: list[int] = [], mode=None) -> None:
-
-    plot_data = df[df['run_id'].isin(bath_ids)]
-    g = sns.relplot(
-        data=plot_data, kind='line',
-        x='time_total', y=param,
-        hue='run_id', aspect=1.5
-    )
-    g.set_axis_labels("Plating Time (s)", param)
-    if y_pos:
-        g.ax.set_ylim(y_pos[0], y_pos[1])
-    g.figure.suptitle(f'{param} vs. Plating Time')
-    g.figure.subplots_adjust(top=0.9) # Adjust the top of the plot to make space for the title
-    return None
+# def open_excel(filepath):
+#     try:
+#         df = pd.read_excel(filepath)
+#     except FileNotFoundError:
+#         print("File not found")
+#         return None
+#     return df
 
 
-def open_excel(filepath):
-    try:
-        df = pd.read_excel(filepath)
-    except FileNotFoundError:
-        print("File not found")
-        return None
-    return df
-
-
-def clean_data(df):
-    df_filtered = df[(df['Voltage'] != '-') & (df['Current'] != '-')]
-    return df_filtered
+# def clean_data(df):
+#     df_filtered = df[(df['Voltage'] != '-') & (df['Current'] != '-')]
+#     return df_filtered
 
 
