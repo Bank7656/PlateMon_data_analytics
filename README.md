@@ -8,12 +8,16 @@ Project Structure
 
 The project is structured as follows:
 
+```bash
 .
 ├── src/
-│   └── (Additional scripts or modules, if any)
+│   └── __init__.py
+│   └── load.py
+│   └── plot.py
 ├── monitoring_data.ipynb
 ├── requirements.txt
 └── .gitignore
+```
 
     monitoring_data.ipynb: The main Jupyter Notebook containing the data loading, cleaning, analysis, and visualization.
 
@@ -58,16 +62,17 @@ git clone https://github.com/Bank7656/PlateMon_data_analytics.git
 cd PlateMon_data_analytics
 
 Create a virtual environment (recommended):
-Bash
+```Bash
 
 python -m venv venv
 source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+```
 
 Install the required packages:
-Bash
+```bash
 
     pip install -r requirements.txt
-
+```
 Running the Analysis
 
     Launch Jupyter Notebook:
