@@ -1,6 +1,6 @@
-#**PlateMon Data Analytics**
+# **PlateMon Data Analytics**
 
-Project Structure
+## Project Structure
 
 The project is structured as follows:
 
@@ -15,7 +15,7 @@ The project is structured as follows:
 └── .gitignore
 ```
 
-##Prerequisites
+## Prerequisites
 
 Ensure you have the following installed:
 
@@ -23,7 +23,7 @@ Ensure you have the following installed:
 
     pip (Python package installer).
 
-##Installation
+## Installation
 
 1. Clone the repository
 ```Bash
@@ -65,6 +65,6 @@ pip install -r requirements.txt
     In the Jupyter interface, navigate to and open monitoring_data.ipynb. Run all cells within the notebook to perform the data analysis and visualization.
 
 
-##Contributing
+## Contributing
 
 Contributions are welcome! If you have suggestions for improvements, bug fixes, or new features, please open an issue or submit a pull request.
