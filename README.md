@@ -30,10 +30,13 @@ Installation
 git clone https://github.com/Bank7656/PlateMon_data_analytics.git
 cd PlateMon_data_analytics
 ```
+
+
 2. Create a virtual environment (recommended)
 ```Bash
 python -m venv venv
 ```
+
 
 3. Activate the virtual environment
 
@@ -46,10 +49,13 @@ python -m venv venv
     source venv/bin/activate
     ```
 
-5. Install the required packages
+
+4. Install the required packages
 ```bash
 pip install -r requirements.txt
 ```
+
+
 5. Running the Analysis
 
     Launch Jupyter Notebook:
@@ -57,6 +63,7 @@ pip install -r requirements.txt
     jupyter notebook
     ```
     In the Jupyter interface, navigate to and open monitoring_data.ipynb. Run all cells within the notebook to perform the data analysis and visualization.
+
 
 Contributing
 
