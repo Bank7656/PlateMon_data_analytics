@@ -1,4 +1,7 @@
 import gspread as gc
+import sys
+from gspread.exceptions import APIError, WorksheetNotFound
+from gspread_dataframe import set_with_dataframe
 import pandas as pd
 
 googleclient = gc.service_account()
@@ -27,6 +30,7 @@ FILTERED_INTERNAL_COL = [
 	"voltage",
 	"current",
 	"amp_hour",
+	# "deposition_rate",
 	"bath_id"
 ]
 
@@ -39,6 +43,7 @@ CONVERT_COL = {
 	"voltage" : float,
 	"current" : float,
 	"amp_hour" : float,
+	# "deposition_rate": float,
 	"bath_id" : object
 }
 
@@ -49,22 +54,22 @@ CONVERT_INTERNAL_COL = {
 }
 
 
-def load_sheet(prompt) -> pd.DataFrame:
+def load_sheet(file_name, prompt):
 
 	def open_sheet(gc):
 		try:
-			sheet = gc.open("Electroplate Experiments Data")
+			sheet = gc.open(file_name)
 			return (sheet)
 		except:
 			print("Sheet does not exists")
-			exit(0)
+			sys.exit(0)
 
 	sheet = open_sheet(googleclient)
 	worksheet = sheet.worksheet(prompt)
 	data = worksheet.get_all_values()
 	headers = data.pop(0)
 	df = pd.DataFrame(data, columns=headers)
-	return df
+	return df, sheet
 
 
 
@@ -87,3 +92,40 @@ def clean_sheet(df) -> pd.DataFrame:
 	df = filter_sheet(df)
 	df = convert_type_sheet(df)
 	return df
+
+
+
+def seperate_table(sheet, df):
+	print(f"You can view the sheet here: {sheet.url}")
+	run_id = df.run_id.unique()
+	worksheet_lst = sheet.worksheets()
+	test = "hello"
+	print("Clean sheet")
+	for id in run_id:
+		try:
+			worksheet = sheet.worksheet(id)
+			sheet.del_worksheet(worksheet)
+			print(f"[OK] Worksheet {id} was deleted.")
+		except WorksheetNotFound:
+			print(f"[OK] Worksheet {id} does not exist.")
+	print("All worksheet are cleaned")
+	for id in run_id:
+		single_run_df = df[df['run_id'] == id]
+		worksheet = None
+		try:
+			worksheet = sheet.add_worksheet(title=id, 
+								   rows=single_run_df.shape[0], 
+								   cols=single_run_df.shape[1]
+								)
+			print(f"[OK] Worksheet {id} was successfully created.")
+		except APIError:
+			print(f"[OK] Sheet {id} already exists")
+			worksheet = sheet.worksheet(id)
+		finally:
+			if worksheet is not None:
+				set_with_dataframe(worksheet, single_run_df)
+				print("[OK] DataFrame successfully written to Google Sheet.")
+			else:
+				print(f"[FAIL] Worksheet {id} does not exist.")
+
+	return 
