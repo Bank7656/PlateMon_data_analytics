@@ -34,7 +34,7 @@ cd PlateMon_data_analytics
 
 2. Create a virtual environment (recommended)
 ```Bash
-python -m venv venv
+python -m venv .venv
 ```
 
 
@@ -46,7 +46,7 @@ python -m venv venv
     ```
     On macOS/Linux:
     ```
-    source venv/bin/activate
+    source .venv/bin/activate
     ```
 
 
