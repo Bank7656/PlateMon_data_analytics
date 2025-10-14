@@ -421,6 +421,7 @@ def plot_conductivity_fft(df,bath_id,run_ids):
   run_dfs = [rdf.iloc[:min_len] for rdf in run_dfs]  # truncate longer runs
   # Merge all runs by index (fill shorter ones with NaN)
   merged_df = pd.concat(run_dfs, axis=1)
+  print(merged_df.head(5))
   # Extract time from first run
   if isinstance(merged_df['time_total'], pd.Series):
     time = merged_df['time_total'].values
@@ -443,6 +444,7 @@ def plot_conductivity_fft(df,bath_id,run_ids):
   axes[0].legend()
 
   # --- Plot Frequency Domain ---
+  graph_df = None
   for col, color in zip(run_ids, colors):
     signal_data = merged_df[col].dropna().values
     if len(signal_data) < 2:
@@ -452,8 +454,12 @@ def plot_conductivity_fft(df,bath_id,run_ids):
 
     fft_vals = np.fft.fft(signal_data - np.mean(signal_data))
     freqs = np.fft.fftfreq(len(signal_data), d=dt)
-    pos_mask = freqs > 0
+    pos_mask = freqs > 0.005
+    print(f"fft_vals: {fft_vals[pos_mask].shape} freqs: {freqs[pos_mask].shape}")
     axes[1].plot(freqs[pos_mask], np.abs(fft_vals[pos_mask]), label=col, color=color)
+    
+    graph_df = pd.concat([graph_df, pd.DataFrame({f"freq_{col}":freqs[pos_mask], f"fft_vals_{col}":np.abs(fft_vals[pos_mask])})], axis=1)
+    
 
   axes[1].set_title("Conductivity Spectrum (Frequency Domain)")
   axes[1].set_xlabel("Frequency (Hz)")
@@ -461,5 +467,7 @@ def plot_conductivity_fft(df,bath_id,run_ids):
   axes[1].grid(True)
   axes[1].legend()
 
+  print(graph_df)
   plt.tight_layout()
   plt.show()
+  return graph_df
