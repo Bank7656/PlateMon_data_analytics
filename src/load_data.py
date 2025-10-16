@@ -6,52 +6,33 @@ import pandas as pd
 
 googleclient = gc.service_account()
 
-FILTERED_COL = [
-	"run_id",
-	"time_total",
-	"conductivity",
-	"temperature",
-	"pH",
-	"voltage",
-	"current",
-	"amp_hour",
-	"bath_id"
-]
 
-FILTERED_INTERNAL_COL = [
-	"run_id",
-	"mass_SLS",
-	"mass_NISO4",
-	"mass_NICL2",
-	"time_total",
-	"conductivity",
-	"temperature",
-	"pH",
-	"voltage",
-	"current",
-	"amp_hour",
-	# "deposition_rate",
-	"bath_id"
-]
+ANOMALY_DETECTION_PARAM = {
+	'run_id' : object, 
+	'timestamp': 'datetime64[ns]', 
+	'time' : int, 
+	'time_total' : int, 
+	'area' : int , 
+	'cathode' : object, 
+	'anode' : object,
+	'mass_SLS' : float, 
+	'mass_NISO4' : float, 
+	'mass_NICL2' : float, 
+	'current_density' : float,
+	'conductivity' : float, 
+	'Anomaly C' : object, 
+	'pH' : float, 
+	'Anomaly P' : object, 
+	'temperature' : float,
+	'Anomaly T' : object, 
+	'voltage' : object, 
+	'Anomaly V' : object, 
+	'current' : float, 
+	'amp_hour' : float,
+	'deposition_rate' : float, 
+	'bath_id' : object
+}	
 
-CONVERT_COL = {
-	"run_id" : object,
-	"time_total" : int,
-	"conductivity" : float,
-	"temperature" : float,
-	"pH" : float,
-	"voltage" : float,
-	"current" : float,
-	"amp_hour" : float,
-	# "deposition_rate": float,
-	"bath_id" : object
-}
-
-CONVERT_INTERNAL_COL = {
-	"mass_SLS" : float,
-	"mass_NISO4" : float,
-	"mass_NICL2" : float
-}
 
 
 def load_sheet(file_name, prompt):
@@ -72,26 +53,15 @@ def load_sheet(file_name, prompt):
 	return df, sheet
 
 
-
-def clean_sheet(df) -> pd.DataFrame:
-
-	def convert_type_sheet(df):
-		df = df.astype(CONVERT_COL)
-		try:
-			return df.astype(CONVERT_INTERNAL_COL)
-		except Exception as e:
-			return df
-
-	def filter_sheet(df): 
-		df = df[(df['voltage'] != '-') & (df['current'] != '-')]
-		try:
-			return df[FILTERED_INTERNAL_COL]
-		except Exception as e:
-			return df[FILTERED_COL]
-	
-	df = filter_sheet(df)
-	df = convert_type_sheet(df)
-	return df
+def clean_sheet_with_label(df) -> pd.DataFrame:
+	filtered_df = pd.DataFrame()
+	df = df[(df['voltage'] != '-') & (df['current'] != '-')]
+	for col, datatype in ANOMALY_DETECTION_PARAM.items():
+		if col not in df.columns:
+			filtered_df[col] = None
+		else:
+			filtered_df[col] = df[col].astype(datatype)
+	return (filtered_df)
 
 
 
