@@ -25,7 +25,7 @@ ANOMALY_DETECTION_PARAM = {
 	'Anomaly P' : object, 
 	'temperature' : float,
 	'Anomaly T' : object, 
-	'voltage' : object, 
+	'voltage' : float, 
 	'Anomaly V' : object, 
 	'current' : float, 
 	'amp_hour' : float,
@@ -55,12 +55,12 @@ def load_sheet(file_name, prompt):
 
 def clean_sheet_with_label(df) -> pd.DataFrame:
 	filtered_df = pd.DataFrame()
-	df = df[(df['voltage'] != '-') & (df['current'] != '-')]
+	clean_old_df = df[(df['voltage'] != '-') & (df['current'] != '-')].copy()
 	for col, datatype in ANOMALY_DETECTION_PARAM.items():
-		if col not in df.columns:
+		if col not in clean_old_df.columns:
 			filtered_df[col] = None
 		else:
-			filtered_df[col] = df[col].astype(datatype)
+			filtered_df[col] = clean_old_df[col].astype(datatype)
 	return (filtered_df)
 
 
