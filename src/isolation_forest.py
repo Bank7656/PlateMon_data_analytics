@@ -213,8 +213,11 @@ def plot_anomaly_detection(X_score_df):
 		ax = axes[i] # Get the current axis for plotting
 
 		# Plot normal points (is_anomaly == 1)
+		# sns.lineplot(x='time_step', y=sensor, 
+		# 			data=X_score_df[X_score_df['is_anomaly'] == 1], 
+		# 			label='Normal', color='blue', alpha=0.6, ax=ax)
 		sns.lineplot(x='time_step', y=sensor, 
-					data=X_score_df[X_score_df['is_anomaly'] == 1], 
+					data=X_score_df, 
 					label='Normal', color='blue', alpha=0.6, ax=ax)
 
 		# Overlay anomaly points (is_anomaly == -1)
