@@ -122,12 +122,21 @@ def score_and_map_anomalies(pipeline, X_raw):
     
     return X_scored
 
+def convert_labels_to_binary(series):
+    """
+    Converts multi-class anomaly labels (e.g., 'N', 'C1', 'C2') into a 
+    binary numeric format (0 for Normal, 1 for Anomaly).
+    """
+    # Define the mapping: 'N' -> 0, anything else -> 1
+    # We assume 'N' is the only normal class.
+    return (series != 'N').astype(int)
+
 def create_pipeline():
 	# --- Configuration ---
-	ROLLING_WINDOW = 1
+	ROLLING_WINDOW = 10
 	CONTAMINATION_RATE = 0.05
 	SENSOR_FEATURES = ["conductivity", "temperature", "pH",	"voltage"]
-	LAG_STEPS = [1, 2 ,5, 10] 
+	LAG_STEPS = [1, 2 ,5] 
 
 	feature_generator = FeatureSelector(
 		sensor_cols=SENSOR_FEATURES,
@@ -212,14 +221,16 @@ def plot_anomaly_detection(X_score_df):
 	for i, sensor in enumerate(SENSOR_FEATURES):
 		ax = axes[i] # Get the current axis for plotting
 
-		# Plot normal points (is_anomaly == 1)
-		# sns.lineplot(x='time_step', y=sensor, 
-		# 			data=X_score_df[X_score_df['is_anomaly'] == 1], 
-		# 			label='Normal', color='blue', alpha=0.6, ax=ax)
-		sns.lineplot(x='time_step', y=sensor, 
-					data=X_score_df, 
-					label='Normal', color='blue', alpha=0.6, ax=ax)
-
+		if (len(X_score_df['run_id'].unique()) < 20):
+			sns.lineplot(x='time_step', y=sensor, 
+						data=X_score_df, 
+						hue='run_id',
+						color='blue', alpha=0.6, ax=ax)
+		else:
+			sns.lineplot(x='time_step', y=sensor, 
+						data=X_score_df, 
+						hue='run_id', legend=False,
+						color='blue', alpha=0.6, ax=ax)
 		# Overlay anomaly points (is_anomaly == -1)
 		sns.scatterplot(x='time_step', y=sensor, 
 						data=X_score_df[X_score_df['is_anomaly'] == -1], 
@@ -228,7 +239,55 @@ def plot_anomaly_detection(X_score_df):
 		ax.set_title(f'Time Series of {sensor}')
 		ax.set_xlabel('Time Step')
 		ax.set_ylabel(sensor)
-		ax.legend()
+		
+		ax.grid(True, linestyle='--', alpha=0.7) # Add a grid for better readability
+
+	# Adjust layout to prevent overlap and display the plot
+	plt.tight_layout()
+	plt.suptitle('Time Series Analysis of Sensor Data with Isolation Forest Anomalies', 
+				y=1.02, fontsize=16) # Add a main title for the entire figure
+	plt.show()
+
+def plot_anomaly_detection_each_run(X_score_df):
+	# Assuming X_scored_df is already prepared as per previous steps.
+	# If 'timestamp' is a column, you might want to use it instead of index for X-axis.
+	# If not, X_scored_df.index is a good proxy for 'time_step'.
+	X_score_df['time_step'] = X_score_df.index 
+
+	# Define the sensor features you want to plot
+	SENSOR_FEATURES = ["conductivity", "temperature", "pH", "voltage"]
+
+	# Create a figure and a set of subplots
+	# We'll arrange them in 2 rows and 2 columns
+	fig, axes = plt.subplots(nrows=len(SENSOR_FEATURES)//2, ncols=2, 
+							figsize=(20, 12), sharex=True) # sharex=True aligns x-axes
+
+	# Flatten the axes array for easier iteration if it's 2D
+	axes = axes.flatten()
+
+	# Loop through each sensor and create a subplot
+	for i, sensor in enumerate(SENSOR_FEATURES):
+		ax = axes[i] # Get the current axis for plotting
+
+		if (len(X_score_df['run_id'].unique()) < 20):
+			sns.lineplot(x='index', y=sensor, 
+						data=X_score_df, 
+						hue='run_id',
+						color='blue', alpha=0.6, ax=ax)
+		else:
+			sns.lineplot(x='index', y=sensor, 
+						data=X_score_df, 
+						hue='run_id', legend=False,
+						color='blue', alpha=0.6, ax=ax)
+		# Overlay anomaly points (is_anomaly == -1)
+		sns.scatterplot(x='index', y=sensor, 
+						data=X_score_df[X_score_df['is_anomaly'] == -1], 
+						label='Anomaly', color='red', marker='X', s=100, ax=ax)
+
+		ax.set_title(f'Time Series of {sensor}')
+		ax.set_xlabel('Time Step')
+		ax.set_ylabel(sensor)
+		
 		ax.grid(True, linestyle='--', alpha=0.7) # Add a grid for better readability
 
 	# Adjust layout to prevent overlap and display the plot
