@@ -60,7 +60,10 @@ def clean_sheet_with_label(df) -> pd.DataFrame:
 		if col not in clean_old_df.columns:
 			filtered_df[col] = None
 		else:
-			filtered_df[col] = clean_old_df[col].astype(datatype)
+			try:
+				filtered_df[col] = clean_old_df[col].astype(datatype)
+			except Exception as e:
+				filtered_df[col] = clean_old_df[col]
 	return (filtered_df)
 
 
