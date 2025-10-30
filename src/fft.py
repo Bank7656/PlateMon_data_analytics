@@ -170,8 +170,8 @@ def plot_pH_fft(df,bath_id,run_ids):
     signal_data = merged_df[col].dropna().values
     if len(signal_data) < 2:
       continue  # skip if too short
-    if np.allclose(signal_data, signal_data[0]):
-      continue  # skip constant signals
+    # if np.allclose(signal_data, signal_data[0]):
+    #   continue  # skip constant signals
 
     fft_vals = np.fft.fft(signal_data - np.mean(signal_data))
     freqs = np.fft.fftfreq(len(signal_data), d=dt)
