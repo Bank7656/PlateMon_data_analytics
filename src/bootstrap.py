@@ -1,8 +1,11 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.stats import ks_2samp, gaussian_kde
 from statsmodels.tsa.stattools import acf
+from statsmodels.tsa.seasonal import STL
 import warnings
+import random
 
 # --- Suppress warnings for cleaner output ---
 warnings.filterwarnings("ignore")
@@ -14,8 +17,10 @@ warnings.filterwarnings("ignore")
 def get_all_blocks(series_list, block_size):
     """
     Extracts all overlapping blocks from a list of series.
+    Works on each run_id seperately. 
     """
     all_blocks = []
+    # Seperatly create possible sampling blocks from each run_id
     for series in series_list:
         n = len(series)
         # Get starting indices for this series
@@ -60,6 +65,64 @@ def generate_pooled_mbb(block_pool, series_length, block_size=10, n_samples=1000
 # 2. PRE-PROCESSING FUNCTION
 # =============================================================================
 
+def series_decompose(original_list, period=3):
+    """
+    Applied decompser to extract and keep trend/seasonality of the original data
+    before putting the residuals through the bootstrapping procedure.
+    """
+    series_length = min(len(s) for s in original_list)
+    decomposed_df = []
+    
+    for series in original_list:
+        series = series[:series_length]
+        
+        if (series.min() <= 0):
+            STL_type = 'additive'
+        else:
+            # 1. Perform an additive decomposition to get the parts
+
+            # Note: STL trend and resid will have NaNs if not a full cycle
+            # We need to use .dropna() to align them for the correlation
+            stl = STL(series, period=period, seasonal_deg=0, robust=True)
+            result = stl.fit()
+
+            # Combine trend and residuals into a new DataFrame to align them
+            check_df = pd.DataFrame({
+                'trend': result.trend,
+                'resid_abs': np.abs(result.resid)
+            }).dropna()
+
+            # 2. Check the correlation
+            # Use 'spearman' for a more robust (non-linear) check
+            correlation = check_df['trend'].corr(check_df['resid_abs'], method='spearman')
+
+            print(f"Trend/Residual-Size Correlation: {correlation:.4f}")
+
+            # 3. Use an 'if' clause to decide
+            # A correlation > 0.3 (or some other threshold) suggests a relationship
+            if correlation > 0.3:
+                print("Wiggles grow with trend. Recommending 'multiplicative'.")
+                series = np.log(series)
+        result = STL(series, period=period, seasonal_deg=0, robust=True).fit()
+        
+        result_df = pd.DataFrame({
+            'trend': result.trend,
+            'resid_abs': np.abs(result.resid)
+        }).dropna()
+        
+        decomposed_df.append(result_df)
+        
+    return decomposed_df, series_length
+
+def series_recompose(synthetic_list, trend_list, series_length):
+    recomposed_list = []
+    for series in synthetic_list:
+        IDX = random.randint(0, 2)
+        trend = trend_list[IDX][:series_length]
+        series = series + trend
+        recomposed_list.append(series)
+    return recomposed_list
+        
 def preprocess_data(series_list):
     """
     Applies the same de-meaning and truncating to the original data
