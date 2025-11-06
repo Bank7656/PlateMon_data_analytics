@@ -107,7 +107,7 @@ def series_decompose(original_list, period=3):
         
         result_df = pd.DataFrame({
             'trend': result.trend,
-            'resid_abs': np.abs(result.resid)
+            'resid_abs': result.resid
         }).dropna()
         
         decomposed_df.append(result_df)
