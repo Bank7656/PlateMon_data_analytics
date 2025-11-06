@@ -1,0 +1,7 @@
+RED = "\x1b[1;31m"
+BLUE = "\x1b[1;34m"
+GREEN = "\x1b[1;32m"
+RESET = "\x1b[0m"
+INFO = f"{BLUE}[INFO]{RESET}"
+OK = f"{GREEN}[OK]{RESET}"
+KO = f"{RED}[KO]{RESET}"

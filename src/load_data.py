@@ -6,6 +6,13 @@ import pandas as pd
 
 googleclient = gc.service_account()
 
+RED = "\x1b[1;31m"
+BLUE = "\x1b[1;34m"
+GREEN = "\x1b[1;32m"
+RESET = "\x1b[0m"
+INFO = f"{BLUE}[INFO]{RESET}"
+OK = f"{GREEN}[OK]{RESET}"
+KO = f"{RED}[KO]{RESET}"
 
 ANOMALY_DETECTION_PARAM = {
 	'run_id' : object, 
@@ -42,18 +49,23 @@ def load_sheet(file_name, prompt):
 			sheet = gc.open(file_name)
 			return (sheet)
 		except:
-			print("Sheet does not exists")
-			sys.exit(0)
+			print(f"{KO} Sheet does not exists")
+			sys.exit(1)
 
 	sheet = open_sheet(googleclient)
 	worksheet = sheet.worksheet(prompt)
 	data = worksheet.get_all_values()
+	if not data:
+		print(f"{KO} No data found in the sheet.")
+		sys.exit(1)
+
 	headers = data.pop(0)
 	df = pd.DataFrame(data, columns=headers)
+	print(f"{OK} {file_name} was load successfully")
 	return df, sheet
 
 
-def clean_sheet_with_label(df) -> pd.DataFrame:
+def clean_sheet_with_label(name, df) -> pd.DataFrame:
 	filtered_df = pd.DataFrame()
 	clean_old_df = df[(df['voltage'] != '-') & (df['current'] != '-')].copy()
 	for col, datatype in ANOMALY_DETECTION_PARAM.items():
@@ -64,41 +76,49 @@ def clean_sheet_with_label(df) -> pd.DataFrame:
 				filtered_df[col] = clean_old_df[col].astype(datatype)
 			except Exception as e:
 				filtered_df[col] = clean_old_df[col]
+	print(f"{OK} {name} was filtered successfully")
 	return (filtered_df)
 
 
 
-def seperate_table(sheet, df):
-	print(f"You can view the sheet here: {sheet.url}")
-	run_id = df.run_id.unique()
-	worksheet_lst = sheet.worksheets()
-	test = "hello"
-	print("Clean sheet")
-	for id in run_id:
-		try:
-			worksheet = sheet.worksheet(id)
-			sheet.del_worksheet(worksheet)
-			print(f"[OK] Worksheet {id} was deleted.")
-		except WorksheetNotFound:
-			print(f"[OK] Worksheet {id} does not exist.")
-	print("All worksheet are cleaned")
-	for id in run_id:
-		single_run_df = df[df['run_id'] == id]
-		worksheet = None
-		try:
-			worksheet = sheet.add_worksheet(title=id, 
-								   rows=single_run_df.shape[0], 
-								   cols=single_run_df.shape[1]
-								)
-			print(f"[OK] Worksheet {id} was successfully created.")
-		except APIError:
-			print(f"[OK] Sheet {id} already exists")
-			worksheet = sheet.worksheet(id)
-		finally:
-			if worksheet is not None:
-				set_with_dataframe(worksheet, single_run_df)
-				print("[OK] DataFrame successfully written to Google Sheet.")
-			else:
-				print(f"[FAIL] Worksheet {id} does not exist.")
+# def seperate_table(sheet, df):
+# 	print(f"You can view the sheet here: {sheet.url}")
+# 	run_id = df.run_id.unique()
+# 	worksheet_lst = sheet.worksheets()
+# 	test = "hello"
+# 	print("Clean sheet")
+# 	for id in run_id:
+# 		try:
+# 			worksheet = sheet.worksheet(id)
+# 			sheet.del_worksheet(worksheet)
+# 			print(f"[OK] Worksheet {id} was deleted.")
+# 		except WorksheetNotFound:
+# 			print(f"[OK] Worksheet {id} does not exist.")
+# 	print("All worksheet are cleaned")
+# 	for id in run_id:
+# 		single_run_df = df[df['run_id'] == id]
+# 		worksheet = None
+# 		try:
+# 			worksheet = sheet.add_worksheet(title=id, 
+# 								   rows=single_run_df.shape[0], 
+# 								   cols=single_run_df.shape[1]
+# 								)
+# 			print(f"[OK] Worksheet {id} was successfully created.")
+# 		except APIError:
+# 			print(f"[OK] Sheet {id} already exists")
+# 			worksheet = sheet.worksheet(id)
+# 		finally:
+# 			if worksheet is not None:
+# 				set_with_dataframe(worksheet, single_run_df)
+# 				print("[OK] DataFrame successfully written to Google Sheet.")
+# 			else:
+# 				print(f"[FAIL] Worksheet {id} does not exist.")
+# 	return 
 
-	return 
+
+
+
+
+
+
+

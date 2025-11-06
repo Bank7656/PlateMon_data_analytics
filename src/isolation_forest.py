@@ -61,8 +61,8 @@ class FeatureSelector(BaseEstimator, TransformerMixin):
 	def transform(self, X):
 		df_working = X.copy()
 
-		df_working = self._generate_lag_features(df_working)
-		df_working = self._generate_rolling_statistics(df_working)
+		# df_working = self._generate_lag_features(df_working)
+		# df_working = self._generate_rolling_statistics(df_working)
 
 		index_retained = df_working.dropna().index
 		df_working.dropna(inplace=True)
@@ -131,15 +131,15 @@ def convert_labels_to_binary(series):
     # We assume 'N' is the only normal class.
     return (series != 'N').astype(int)
 
-def create_pipeline():
+def create_pipeline(param=["conductivity", "temperature", "pH",	"voltage"]):
 	# --- Configuration ---
-	ROLLING_WINDOW = 10
-	CONTAMINATION_RATE = 0.05
-	SENSOR_FEATURES = ["conductivity", "temperature", "pH",	"voltage"]
+	ROLLING_WINDOW = 60
+	CONTAMINATION_RATE = 0.1
+	# SENSOR_FEATURES = ["conductivity", "temperature", "pH",	"voltage"]
 	LAG_STEPS = [1, 2 ,5] 
 
 	feature_generator = FeatureSelector(
-		sensor_cols=SENSOR_FEATURES,
+		sensor_cols=param,
 		lag_steps=LAG_STEPS,
 		rolling_window=ROLLING_WINDOW
 	)
