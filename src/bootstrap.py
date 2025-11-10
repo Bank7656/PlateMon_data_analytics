@@ -76,34 +76,34 @@ def series_decompose(original_list, period=3):
     for series in original_list:
         series = series[:series_length]
         
-        if (series.min() <= 0):
-            STL_type = 'additive'
-        else:
+        #if (series.min() <= 0):
+        #    STL_type = 'additive'
+        #else:
             # 1. Perform an additive decomposition to get the parts
 
             # Note: STL trend and resid will have NaNs if not a full cycle
             # We need to use .dropna() to align them for the correlation
-            stl = STL(series, period=period, seasonal_deg=0, robust=True)
-            result = stl.fit()
+        #    stl = STL(series, period=period, seasonal_deg=0, robust=True)
+        #    result = stl.fit()
 
             # Combine trend and residuals into a new DataFrame to align them
-            check_df = pd.DataFrame({
-                'trend': result.trend,
-                'resid_abs': np.abs(result.resid)
-            }).dropna()
+        #    check_df = pd.DataFrame({
+        #        'trend': result.trend,
+        #        'resid_abs': np.abs(result.resid)
+        #    }).dropna()
 
             # 2. Check the correlation
             # Use 'spearman' for a more robust (non-linear) check
-            correlation = check_df['trend'].corr(check_df['resid_abs'], method='spearman')
+        #    correlation = check_df['trend'].corr(check_df['resid_abs'], method='spearman')
 
-            print(f"Trend/Residual-Size Correlation: {correlation:.4f}")
+        #    print(f"Trend/Residual-Size Correlation: {correlation:.4f}")
 
             # 3. Use an 'if' clause to decide
             # A correlation > 0.3 (or some other threshold) suggests a relationship
-            if correlation > 0.3:
-                print("Wiggles grow with trend. Recommending 'multiplicative'.")
-                series = np.log(series)
-        result = STL(series, period=period, seasonal_deg=0, robust=True).fit()
+        #    if correlation > 0.3:
+        #        print("Wiggles grow with trend. Recommending 'multiplicative'.")
+        #        series = np.log(series)
+        result = STL(series, period=period, seasonal_deg=0, trend=7, robust=True).fit()
         
         result_df = pd.DataFrame({
             'trend': result.trend,
