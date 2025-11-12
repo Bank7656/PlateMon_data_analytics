@@ -1,0 +1,34 @@
+['experiments']
+NORMAL_RUN = [
+    'JUL_22_1', 
+    'JUL_22_2', 
+    'JUL_22_4', 
+    'JUL_22_5', 
+    'JUL_22_7', 
+    'OCT_17_2', 
+    'OCT_17_3', 
+    'OCT_17_4', 
+    'OCT_17_5', 
+    'OCT_17_6', 
+    'NOV_5_1', 
+    'NOV_5_2', 
+    'NOV_5_3', 
+    'NOV_5_4', 
+    'NOV_5_5'
+]
+ANOMALY_RUN = [
+    'JUL_22_3', 
+    'JUL_22_6', 
+    'JUL_23_4', 
+    'JUL_23_5', 
+    'JUL_24_3', 
+    'OCT_24_4'
+]
+
+['list']
+PARAM_LIST = ['voltage', 'conductivity', 'pH', 'temperature']
+ANOMALY_LIST = ['Anomaly V', 'Anomaly C', 'Anomaly P', 'Anomaly T']
+
+['file']
+EXTRACT_FILE = "electroplating_extracted.csv"
+LABEL_TRANSFORM_FILE = "transform_with_label.csv"

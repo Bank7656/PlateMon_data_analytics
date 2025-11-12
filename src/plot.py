@@ -1,5 +1,7 @@
 import os
 from tqdm import tqdm_notebook as tqdm
+import matplotlib.ticker as ticker
+from matplotlib.ticker import StrMethodFormatter
 import matplotlib.pyplot as plt
 import numpy as np 
 import pandas as pd
@@ -63,7 +65,7 @@ def plot_single_bath(df, bath_ids, param, y_pos: list[int] = []) -> None:
     g = sns.relplot(
         data=plot_data, kind='line',
         x='time_total', y=param,
-        hue='run_id', aspect=1.5
+        hue='run_id', aspect=2.
     )
     g.set_axis_labels("Plating Time (s)", param)
     if y_pos:
@@ -164,6 +166,20 @@ def plot_all_params(df, run_ids, variables, mode=None, directory=None) -> plt.Fi
                 x='time_total', y=params[count],
                 hue='run_id', ax=axes[i][j]
             )
+            if (params[count] in ['temperature']):
+                minor_locator = ticker.AutoMinorLocator(2)
+                ax.yaxis.set_minor_locator(minor_locator)
+                ax.yaxis.set_minor_formatter(StrMethodFormatter("{x:.1f}"))
+            elif (params[count] in ['pH', 'current']):
+                minor_locator = ticker.AutoMinorLocator(2)
+                ax.yaxis.set_minor_locator(minor_locator)
+                ax.yaxis.set_minor_formatter(StrMethodFormatter("{x:.2f}"))
+            elif (params[count] in ['conductivity']):
+                minor_locator = ticker.AutoMinorLocator(4)
+                ax.yaxis.set_minor_locator(minor_locator)
+                ax.yaxis.set_minor_formatter(StrMethodFormatter("{x:.2f}"))
+            
+            ax.grid(which='minor', linestyle=':', linewidth='0.5', color='gray')
             ax.set_xlabel('Plating Time (sec)', fontsize=16)
             if variables[params[count]]:
                 ax.set_ylim(variables[params[count]][0], variables[params[count]][1])
