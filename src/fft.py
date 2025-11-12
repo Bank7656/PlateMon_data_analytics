@@ -5,8 +5,11 @@ from scipy import signal
 
 def plot_conductivity_fft(df,bath_id,run_ids):
   
-  condition = (df['bath_id'] == bath_id)
-  bath_df = df[condition][['run_id','time_total','conductivity']]
+  if bath_id != None:
+    condition = (df['bath_id'] == bath_id)
+    bath_df = df[condition][['run_id','time_total','conductivity']]
+  else:
+    bath_df = df[['run_id','time_total','conductivity']]
   run_ids = run_ids
   run_dfs = []
   for id in run_ids:
@@ -53,7 +56,7 @@ def plot_conductivity_fft(df,bath_id,run_ids):
 
     fft_vals = np.fft.fft(signal_data - np.mean(signal_data))
     freqs = np.fft.fftfreq(len(signal_data), d=dt)
-    pos_mask = freqs > 0
+    pos_mask = freqs > 0.01
     axes[1].plot(freqs[pos_mask], np.abs(fft_vals[pos_mask]), label=col, color=color)
     graph_df = pd.concat([graph_df, pd.DataFrame({f"freq_{col}":freqs[pos_mask], 
                             f"fft_vals_{col}":np.abs(fft_vals[pos_mask])})], axis=1)
@@ -136,8 +139,11 @@ def plot_avg_fft_bars(df):
 
 def plot_voltage_fft(df,bath_id,run_ids):
   
-  condition = (df['bath_id'] == bath_id)
-  bath_df = df[condition][['run_id','time_total','voltage']]
+  if bath_id != None:
+    condition = (df['bath_id'] == bath_id)
+    bath_df = df[condition][['run_id','time_total','voltage']]
+  else:
+    bath_df = df[['run_id','time_total','voltage']]
   run_ids = run_ids
   run_dfs = []
   for id in run_ids:
@@ -174,7 +180,7 @@ def plot_voltage_fft(df,bath_id,run_ids):
       continue  # skip constant signals
 
     signal_data = signal.detrend(signal_data)
-    axes[0].plot(time, signal_data, label=col, color=color)
+    axes[0].plot(time, merged_df[col], label=col, color=color)
   axes[0].set_title("Voltage vs Time")
   axes[0].set_xlabel("Time (s)")
   axes[0].set_ylabel("Conductivity")
@@ -194,7 +200,7 @@ def plot_voltage_fft(df,bath_id,run_ids):
 
     fft_vals = np.fft.fft(signal_data - np.mean(signal_data))
     freqs = np.fft.fftfreq(len(signal_data), d=dt)
-    pos_mask = freqs > 0
+    pos_mask = freqs > 0.01
     axes[1].plot(freqs[pos_mask], np.abs(fft_vals[pos_mask]), label=col, color=color)
     
     graph_df = pd.concat([graph_df, pd.DataFrame({f"freq_{col}":freqs[pos_mask], f"fft_vals_{col}":np.abs(fft_vals[pos_mask])})], axis=1)
@@ -209,3 +215,37 @@ def plot_voltage_fft(df,bath_id,run_ids):
   plt.tight_layout()
   plt.show()
   return graph_df
+
+def store_separated_runs(df, run_ids, param):
+    # Fixed time base: 0 to 1200 s, step 2 → 601 rows
+    fixed_time = np.arange(0, 1201, 2)
+
+    # Container for aligned runs
+    aligned_runs = []
+
+    for run_id in run_ids:
+        # Extract data for this run
+        run_df = df[df['run_id'] == run_id][['time_total', param]].copy()
+
+        # Normalize time to start at 0
+        if not run_df.empty:
+            run_df['time_total'] = run_df['time_total'] - run_df['time_total'].iloc[0]
+        else:
+            # Empty run — just create NaN series
+            run_df = pd.DataFrame({'time_total': fixed_time, param: np.nan})
+
+        # Reindex (interpolate or fill NaN as needed)
+        run_df = run_df.set_index('time_total').reindex(fixed_time).reset_index()
+        run_df.rename(columns={'index': 'time_total', param: run_id}, inplace=True)
+        aligned_runs.append(run_df)
+
+    # Merge all runs on the same time base
+    merged_df = aligned_runs[0][['time_total']].copy()
+    for run_df in aligned_runs:
+        merged_df = merged_df.merge(run_df[['time_total', run_df.columns[1]]],
+                                    on='time_total', how='outer')
+
+    # Sort by time (just in case)
+    merged_df = merged_df.sort_values('time_total').reset_index(drop=True)
+
+    return merged_df
