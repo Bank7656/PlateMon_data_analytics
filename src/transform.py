@@ -44,6 +44,7 @@ def get_pivot_df(df, state):
             var_name='metric',
             value_name='value'
         )
+        melted_df['value'] = pd.to_numeric(melted_df['value'], errors='coerce')
         pivot_df = melted_df.pivot_table(
             index=['run_id', 'metric'],
             columns='index', 
@@ -57,7 +58,7 @@ def get_pivot_df(df, state):
         pivot_df.columns.name = None
 
         value_cols = [col for col in pivot_df.columns if col not in ['run_id', 'metric']]
-        pivot_df[value_cols] = pivot_df[value_cols].apply(pd.to_numeric, errors='coerce')
+        # pivot_df[value_cols] = pivot_df[value_cols].apply(pd.to_numeric, errors='coerce')
 
         # Select the rows you want to modify
         is_param = (pivot_df['metric'] == parameter)
