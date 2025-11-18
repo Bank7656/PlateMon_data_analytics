@@ -8,10 +8,15 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from src.utils import save_df_to_csv, load_config
+from src.color import *
 
 
 def transform():
-
+    try:
+        config = load_config("config.toml")
+    except:
+        print(f"{KO} Can't import config.toml")
+    global_config(config)
     print("  Transform State  ".center(80, "="))
     extract_file_path = f"./data/extract/{EXTRACT_FILE}"
     df = pd.read_csv(extract_file_path, index_col=False)
@@ -109,6 +114,20 @@ def get_label_run(df):
     save_df_to_csv(label_df, "./data/transform", LABEL_TRANSFORM_FILE)
     return label_df
 
+def global_config(cf):
+    global NORMAL_RUN
+    global ANOMALY_RUN
+    global PARAM_LIST
+    global ANOMALY_LIST
+    global EXTRACT_FILE
+    global LABEL_TRANSFORM_FILE
+    NORMAL_RUN = cf['experiments']['NORMAL_RUN']
+    ANOMALY_RUN = cf['experiments']['ANOMALY_RUN']
+    PARAM_LIST = cf['list']['PARAM_LIST']
+    ANOMALY_LIST = cf['list']['ANOMALY_LIST']
+    EXTRACT_FILE = cf['file']['EXTRACT_FILE']
+    LABEL_TRANSFORM_FILE = cf['file']['LABEL_TRANSFORM_FILE']
+
 if __name__ == "__main__":
     if os.path.basename(os.getcwd()) == 'src':
         os.chdir("..")
@@ -120,15 +139,5 @@ if __name__ == "__main__":
     INFO = f"{BLUE}[INFO]{RESET}"
     OK = f"{GREEN}[OK]{RESET}"
     KO = f"{RED}[KO]{RESET}"
-    try:
-        config = load_config("config.toml")
-    except:
-        print(f"{KO} Can't import config.toml")
-    NORMAL_RUN = config['experiments']['NORMAL_RUN']
-    ANOMALY_RUN = config['experiments']['ANOMALY_RUN']
-    PARAM_LIST = config['list']['PARAM_LIST']
-    ANOMALY_LIST = config['list']['ANOMALY_LIST']
-    EXTRACT_FILE = config['file']['EXTRACT_FILE']
-    LABEL_TRANSFORM_FILE = config['file']['LABEL_TRANSFORM_FILE']
     transform()
     sys.exit(0)
