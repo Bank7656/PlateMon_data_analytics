@@ -2,16 +2,60 @@ import gspread as gc
 import numpy as np
 import pandas as pd
 import sys
+import os
 from gspread.exceptions import APIError, WorksheetNotFound
 from gspread_dataframe import set_with_dataframe
 
-from src.config import ANOMALY_DETECTION_PARAM, EXTRACT_FILE
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
 from src.color import *
-from src.utils import save_df_to_csv
+from src.utils import save_df_to_csv, load_config
+
+
 
 googleclient = gc.service_account()
 
+ANOMALY_DETECTION_PARAM = {
+    'run_id' : object, 
+    'timestamp': 'datetime64[ns]', 
+    'time' : int, 
+    'time_total' : int, 
+    'area' : int , 
+    'cathode' : object, 
+    'anode' : object,
+    'mass_SLS' : float, 
+    'mass_NISO4' : float, 
+    'mass_NICL2' : float, 
+    'current_density' : float,
+    'conductivity' : float, 
+    'Anomaly C' : object, 
+    'pH' : float, 
+    'Anomaly P' : object, 
+    'temperature' : float,
+    'Anomaly T' : object, 
+    'voltage' : float, 
+    'Anomaly V' : object, 
+    'current' : float, 
+    'amp_hour' : float,
+    'deposition_rate' : float, 
+    'bath_id' : object
+}
+
 def extract():
+
+    try:
+        config = load_config("config.toml")
+    except:
+        print(f"{KO} Can't import config.toml")
+    # NORMAL_RUN = config['multivariate']['NORMAL_RUN']
+    # ANOMALY_RUN = config['multivariate']['ANOMALY_RUN']
+    # PARAM_LIST = config['list']['PARAM_LIST']
+    # ANOMALY_LIST = config['list']['ANOMALY_LIST']
+    EXTRACT_FILE = config['file']['EXTRACT_FILE']
+    # LABEL_TRANSFORM_FILE = config['file']['LABEL_TRANSFORM_FILE']
+
     print("  Extract State  ".center(80, "="))
     print(f"{INFO} Extracting data")
     jun_jul_df, sheet1 = load_sheet("Electroplate Experiments Data JUN_JUL", "vary_internal_table")
@@ -24,7 +68,7 @@ def extract():
     jun_jul_df = clean_sheet_with_label("Electroplate Experiments Data JUN_JUL", jun_jul_df)
     august_df = clean_sheet_with_label("Electroplating Experiments Data August", august_df)
     september_df = clean_sheet_with_label("Electroplating Experiments Data Sep-Oct", september_df)
-    november_df = clean_sheet_with_label("Electroplating Experiments Data Sep-Oct", november_df)
+    november_df = clean_sheet_with_label("Electroplating Experiments Data November", november_df)
     print(f"{OK} Filtering complete")
 
     print(f"{INFO} Merging data")
@@ -75,5 +119,26 @@ def clean_sheet_with_label(name, df) -> pd.DataFrame:
 				filtered_df[col] = clean_old_df[col].astype(datatype)
 			except Exception as e:
 				filtered_df[col] = clean_old_df[col]
+	label_filtered_df = filtered_df[
+		(filtered_df['Anomaly C'] != '-') &
+		(filtered_df['Anomaly P'] != '-') &
+		(filtered_df['Anomaly T'] != '-') &
+		(filtered_df['Anomaly V'] != '-')
+	].copy()
 	print(f"{OK} {name} was filtered successfully")
-	return (filtered_df)
+	return (label_filtered_df)
+
+
+if __name__ == "__main__":
+    if os.path.basename(os.getcwd()) == 'src':
+        os.chdir("..")
+    print(f"Current Working Directory: {os.getcwd()}")
+    RED = "\x1b[1;31m"
+    BLUE = "\x1b[1;34m"
+    GREEN = "\x1b[1;32m"
+    RESET = "\x1b[0m"
+    INFO = f"{BLUE}[INFO]{RESET}"
+    OK = f"{GREEN}[OK]{RESET}"
+    KO = f"{RED}[KO]{RESET}"
+    extract()
+    sys.exit(0)

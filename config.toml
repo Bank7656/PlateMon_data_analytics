@@ -1,29 +1,286 @@
-['experiments']
-NORMAL_RUN = [
-    'JUL_22_1', 
-    'JUL_22_2', 
-    'JUL_22_4', 
-    'JUL_22_5', 
-    'JUL_22_7', 
-    'OCT_17_2', 
-    'OCT_17_3', 
-    'OCT_17_4', 
-    'OCT_17_5', 
-    'OCT_17_6', 
-    'NOV_5_1', 
-    'NOV_5_2', 
-    'NOV_5_3', 
-    'NOV_5_4', 
-    'NOV_5_5'
+['multivariate']
+NORMAL_RUN=[
+	# Bath_3
+	'JUL_22_3',
+	'JUL_22_4',
+	'JUL_22_5',
+	'JUL_22_7',
+
+	# Bath 12
+	'NOV_5_2',
+	'NOV_5_6',
+	'NOV_5_7',
+	'NOV_6_1',
+	'NOV_6_3',
+
+	# Bath 13
+	'NOV_12_1',
+	'NOV_12_2',
+	'NOV_12_4',
+	'NOV_12_5',
+	'NOV_13_2',
+
+	# Bath 14
+	'NOV_14_3',
+	'NOV_14_4',
+	'NOV_14_7',
+
+	# Bath 15
+	'NOV_19_1',
+	'NOV_19_3',
+	'NOV_19_8',
+	'NOV_20_2',
+	'NOV_21_2',
 ]
+
 ANOMALY_RUN = [
-    'JUL_22_3', 
-    'JUL_22_6', 
-    'JUL_23_4', 
-    'JUL_23_5', 
-    'JUL_24_3', 
-    'OCT_24_4'
+	# Bath_3
+	'JUL_22_1',
+	'JUL_22_2',
+	'JUL_22_6',
+	'JUL_22_8',
+	'JUL_22_9',
+	'JUL_23_1',
+	'JUL_23_2',
+	'JUL_23_3',
+	'JUL_23_4',
+	'JUL_23_5',
+	'JUL_24_3',
+
+	# Bath 9
+	'OCT_15_1',
+	'OCT_15_2',
+	'OCT_16_1',
+	'OCT_17_1',
+	'OCT_17_2',
+	'OCT_17_3',
+	'OCT_17_4',
+	'OCT_17_5',
+	'OCT_17_6',
+	'OCT_22_1',
+	'OCT_22_2',
+
+	# Bath 11
+	'OCT_30_1',
+	'OCT_30_2',
+	'OCT_30_3',
+	'OCT_30_4',
+	'OCT_31_1',
+
+	# Bath 12
+	'NOV_5_1',
+	'NOV_6_2',
+	'NOV_6_4',
+	'NOV_6_5',
+
+	# Bath 13
+	'NOV_10_1',
+	'NOV_10_2',
+	'NOV_10_3',
+	'NOV_13_1', #has 500 rpm
+	'NOV_13_2',
+
+	# Bath 14
+	'NOV_13_3',
+	'NOV_13_4',
+	'NOV_13_5',
+	'NOV_14_1',
+	'NOV_14_2',
+	'NOV_14_5',
+	'NOV_14_6',
+	'NOV_14_8',
+	'NOV_14_9',
+	'NOV_14_10',
+
+	# Bath 15
+	'NOV_19_2',
+	'NOV_19_4',
+	'NOV_19_9',
+	'NOV_20_1',
+	'NOV_20_3',
+	'NOV_20_4',
+	'NOV_20_5',
+	'NOV_20_6', # Turn off hotplate
+	'NOV_21_1',
+	'NOV_21_2',
+	'NOV_21_3', # Lift anodes up
+	'NOV_21_4', # Anode disconection
+
+	# Bath_16
+	'NOV_26_1',
+	'NOV_26_2',
+	'NOV_26_3',
+	'NOV_26_4',
+	'NOV_26_5',
+	'NOV_26_6',
+	'NOV_26_7',
+	'NOV_26_8',
+	'NOV_26_9',
+	'NOV_26_10',
+	'NOV_26_11',
+	'NOV_26_12',
+	'NOV_27_1',
+	'NOV_27_2',
+	'NOV_27_3',
+	'NOV_27_4',
+	'NOV_27_5',
+	'NOV_27_6',
+	'NOV_28_1',
+	'NOV_28_2',
+	'NOV_28_3',
 ]
+
+['univariate']
+NORMAL_CONDUCT_LIST = [
+	# Bath 3
+	'JUL_22_1',
+	'JUL_22_2',
+	'JUL_22_3',
+	'JUL_22_4',
+	'JUL_22_5',
+	'JUL_22_7',
+	'JUL_23_1',
+	'JUL_23_2',
+	'JUL_23_3',
+	'JUL_23_5',
+
+	# Bath 9
+	'OCT_16_1', 
+	'OCT_17_1', 
+	'OCT_17_2', 
+	'OCT_17_3', 
+	'OCT_17_4', 
+	'OCT_17_5', 
+	'OCT_22_2', 
+	'OCT_29_1', 
+	'OCT_29_2', 
+	'OCT_29_3', 
+	'OCT_29_4',
+	'NOV_17_2',
+	'NOV_17_3',
+
+	# Bath 12
+	'NOV_5_2',
+	'NOV_5_3',
+	'NOV_5_4',
+	'NOV_5_5',
+	'NOV_5_6',
+	'NOV_5_7',
+	'NOV_6_1',
+	'NOV_6_3',
+	'NOV_6_4',
+	'NOV_6_5',
+
+	# Bath 13
+	'NOV_12_1',
+	'NOV_12_2',
+	'NOV_12_3',
+	'NOV_12_4',
+	'NOV_12_5',
+	'NOV_12_6',
+	'NOV_13_1',
+	'NOV_13_2',
+
+	# Bath 14
+	'NOV_13_3',
+	'NOV_13_4',
+	'NOV_13_5',
+	'NOV_14_1',
+	'NOV_14_2',
+	'NOV_14_3',
+	'NOV_14_4',
+	'NOV_14_5',
+	'NOV_14_6',
+	'NOV_14_7',
+	'NOV_14_8',
+	'NOV_14_9',
+	'NOV_14_10',
+
+	# Bath 15
+	'NOV_19_1',
+	'NOV_19_2',
+	'NOV_19_3',
+	'NOV_19_4',
+	'NOV_19_7',
+	'NOV_19_8',
+	'NOV_20_1',
+	'NOV_20_2',
+	'NOV_20_3',
+	'NOV_20_4',
+	'NOV_20_5',
+	'NOV_20_6',
+	'NOV_21_2',
+
+	# Bath 16
+	'NOV_26_1',
+	'NOV_26_2',
+	'NOV_26_3',
+	'NOV_26_4',
+	'NOV_26_5',
+	'NOV_26_6',
+	'NOV_26_7',
+	'NOV_26_8',
+	'NOV_26_9',
+	'NOV_26_10',
+	'NOV_26_11',
+	'NOV_26_12',
+	'NOV_27_1',
+	'NOV_27_2',
+	'NOV_27_3',
+	'NOV_27_4',
+	'NOV_27_5',
+	'NOV_27_6',
+	'NOV_28_1',
+	'NOV_28_2',
+	'NOV_28_3',
+]
+
+ANOMALY_CONDUCT_LIST = [
+	# Bath 3
+	'JUL_22_6',
+	'JUL_22_8',
+	'JUL_23_4',
+	'JUL_24_3',
+
+	# Bath 9
+	'OCT_15_1',
+	'OCT_15_2',
+	'OCT_17_6',
+	'OCT_22_1',
+
+	# Bath 10
+	'OCT_22_3',
+	'OCT_24_1',
+	'OCT_24_2',
+	'OCT_24_3',
+	'OCT_24_4',
+	'OCT_28_1',
+	'NOV_17_1',
+
+	# Bath 11
+	'OCT_30_1',
+	'OCT_30_2',
+	'OCT_30_3',
+	'OCT_30_4',
+	'OCT_31_1',
+	
+	# Bath 12
+	'NOV_5_1',
+	'NOV_6_1',
+
+	# Bath 13
+	'NOV_10_1',
+	'NOV_10_2',
+	'NOV_10_3',
+
+	# Bath 15
+	'NOV_19_9',
+	'NOV_21_1',
+	'NOV_21_3',
+	'NOV_21_4',
+
+]
+
 
 ['list']
 PARAM_LIST = ['voltage', 'conductivity', 'pH', 'temperature']
