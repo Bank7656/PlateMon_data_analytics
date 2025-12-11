@@ -49,12 +49,12 @@ def extract():
         config = load_config("config.toml")
     except:
         print(f"{KO} Can't import config.toml")
-    NORMAL_RUN = config['experiments']['NORMAL_RUN']
-    ANOMALY_RUN = config['experiments']['ANOMALY_RUN']
-    PARAM_LIST = config['list']['PARAM_LIST']
-    ANOMALY_LIST = config['list']['ANOMALY_LIST']
+    # NORMAL_RUN = config['multivariate']['NORMAL_RUN']
+    # ANOMALY_RUN = config['multivariate']['ANOMALY_RUN']
+    # PARAM_LIST = config['list']['PARAM_LIST']
+    # ANOMALY_LIST = config['list']['ANOMALY_LIST']
     EXTRACT_FILE = config['file']['EXTRACT_FILE']
-    LABEL_TRANSFORM_FILE = config['file']['LABEL_TRANSFORM_FILE']
+    # LABEL_TRANSFORM_FILE = config['file']['LABEL_TRANSFORM_FILE']
 
     print("  Extract State  ".center(80, "="))
     print(f"{INFO} Extracting data")
@@ -119,8 +119,14 @@ def clean_sheet_with_label(name, df) -> pd.DataFrame:
 				filtered_df[col] = clean_old_df[col].astype(datatype)
 			except Exception as e:
 				filtered_df[col] = clean_old_df[col]
+	label_filtered_df = filtered_df[
+		(filtered_df['Anomaly C'] != '-') &
+		(filtered_df['Anomaly P'] != '-') &
+		(filtered_df['Anomaly T'] != '-') &
+		(filtered_df['Anomaly V'] != '-')
+	].copy()
 	print(f"{OK} {name} was filtered successfully")
-	return (filtered_df)
+	return (label_filtered_df)
 
 
 if __name__ == "__main__":
